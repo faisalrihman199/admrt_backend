@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 import os
 load_dotenv()
 SECRET_KEY = os.environ.get('SECRET_KEY')
-print("inside middleware")
+print("middleware")
 @database_sync_to_async
 def get_user_from_jwt(token):
     try:

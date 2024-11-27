@@ -65,7 +65,7 @@ class ChatConsumer(WebsocketConsumer):
 
             # Update the status of all undelivered messages to "delivered"
             self.update_undelivered_messages_to_delivered(self.user)
-            self.mark_notifications_as_delivered(self.user)
+            # self.mark_notifications_as_delivered(self.user)
             # Get the unread message count after updating the status
             unread_counts = self.get_unread_messages_count(self.user)
             print(unread_counts)
@@ -76,7 +76,7 @@ class ChatConsumer(WebsocketConsumer):
                 message = f"You have unread messages."
             else:
                 message = "You have no unread messages."
-            self.emit_unread_notifications(self.user)
+            # self.emit_unread_notifications(self.user)
             
             # Emit the unread count to the user only
             self.send(text_data=json.dumps({

@@ -93,14 +93,17 @@ class ProductSerializer(serializers.ModelSerializer):
         for space_host in data:
             user_id = space_host['user_id']
             space_host_topics = space_host['topics']  # Get the topics list for this user
-
+            print("space_host_topics",space_host_topics)
+            print("topics_list",topics_list)
             # Calculate similarity between the input topics and the user's topics
-            user_similarity = similarity_model.find_similar_topics(topics_list, space_host_topics)
-            
-            similarity_scores_for_users.append({
-                "user_id": user_id,
-                "similarity_scores": user_similarity
-            })
+            if(len(space_host_topics)>0):
+                user_similarity = similarity_model.find_similar_topics(topics_list, space_host_topics)
+                print("user_similarity",user_similarity)
+                similarity_scores_for_users.append({
+                    "user_id": user_id,
+                    "similarity_scores": user_similarity
+                })
+            print("similarity_scores_for_users",similarity_scores_for_users)
 
         print("similarity_scores_for_users",similarity_scores_for_users)
             # Apply condition for maillist based on similarity scores
@@ -130,11 +133,13 @@ class ProductSerializer(serializers.ModelSerializer):
         emails = list(User.objects.filter(id__in=maillist).values_list('email', flat=True))
         print("Emails to Notify:", emails)
         product_name = validated_data.get("name", "a new product")
-        self.send_product_alert_emails(emails, product_name)
-        # Store topics as a stringified list (JSON format)
         product.topics = json.dumps(topics_list)
         product.save()
+        # self.send_product_alert_emails(emails, product_name)
         return product
+       
+        # Store topics as a stringified list (JSON format)
+        
     
     def update(self, instance, validated_data):
         topics_data = validated_data.pop('topics', '')  # Get the comma-separated string, or empty string if not provided
@@ -152,8 +157,6 @@ class ProductSerializer(serializers.ModelSerializer):
     def send_product_alert_emails(self, emails, product_name):
             
         try:
-
-
             # Debug: Print the settings values
             print("EMAIL_HOST_USER:", settings.EMAIL_HOST_USER)
             print("EMAIL_HOST_PASSWORD:", settings.EMAIL_HOST_PASSWORD)
@@ -169,7 +172,7 @@ class ProductSerializer(serializers.ModelSerializer):
             for receiver_email in emails:
                 
                 # Create the email message
-                message = MIMEMultipart("alternative")
+                message = MIMEMultipart();
                 message["Subject"] = "New Product Alert: Your Favorite Interests!"
                 message["From"] = sender_email
                 message["To"] = receiver_email
@@ -186,7 +189,7 @@ class ProductSerializer(serializers.ModelSerializer):
                 </body>
                 </html>
                 """
-                part = MIMEText(html_content, "html")
+                part = MIMEText(html_content, "plain")
                 message.attach(part)
 
                 # Send the email using SMTP

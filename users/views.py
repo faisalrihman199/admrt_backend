@@ -113,6 +113,7 @@ class AdvertiserProductViewSet(ListModelMixin, CreateModelMixin, RetrieveModelMi
     def create(self, request, *args, **kwargs):
         print(f"POST Request Data: {self.request.user.id}")
 
+        # Check admin status
         adminCheck = get_user_model().objects.filter(id=self.request.user.id).first()
 
         if adminCheck.user_role == 'admin':
@@ -120,27 +121,37 @@ class AdvertiserProductViewSet(ListModelMixin, CreateModelMixin, RetrieveModelMi
         else:
             user_req = self.request.user.id
 
+        # Fetch user profile
         userProfile = get_user_model().objects.filter(id=user_req).first()
+        print("user profile: ", userProfile)
 
-        related_object_issue = object_is_not_related(userProfile.profile, 'advertiser')
-        if related_object_issue:
-            return related_object_issue
+        # Clean request data
+        data = request.data.copy()  # Make a mutable copy of QueryDict
+        data.pop('userId', None)  # Remove 'userId' if present
+        print("data is ", data)
 
-        data = request.data
-        data.pop('userId', None)
-
+        # Pass QueryDict directly to the serializer
         if isinstance(data, list):
             serializer = self.get_serializer(data=data, many=True)
         else:
             serializer = self.get_serializer(data=data)
-            
+
+        # Validate and save data
         serializer.is_valid(raise_exception=True)
-        self.perform_create(serializer, userProfile)  # Pass userProfile to perform_create
+        print("Serializer is valid")
+
+        # Perform the creation, passing user profile if needed
+        self.perform_create(serializer, userProfile)
+        print("Created successfully")
 
         headers = self.get_success_headers(serializer.data)
         return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
+
+
+
     def perform_create(self, serializer, userProfile):
+        print("user profile in view is ", userProfile.profile.advertiser)
         serializer.save(user=userProfile.profile.advertiser)
 
     def get_object(self):
